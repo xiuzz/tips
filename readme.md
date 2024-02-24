@@ -273,4 +273,93 @@ func generateSeed(mnemonic string, passphrase string) []byte {
 }
 ```
 
-该种子稍后可用于使用 BIP-0032 或类似方法生成确定性钱包。
+该种子稍后可用于使用 BIP-0032(这个和BIP-0044一起在后面写吧) 或类似方法生成确定性钱包。
+
+## ERC4337
+
+## Bloom Filter
+
+布隆过滤器,在之前居然没有听说过这个数据结构，本身原理还是很简单的。它的使用范围也很简单：设想一个这样的场景我们有一堆大数据，然后验证一个大数据是否存在于其中。我们首先相当的肯定是将这堆数据以红黑树的形式存起来或者hash表，前者查找效率为o(logn),后者为o(1)，非常的优秀，但是我们却忽略了存储的问题，大数据是有可能导致存储超限，存不进去的。
+
+那如何解决呢？bloom filter就有`概率`解决这个问题，其本质是bitset(虽然看网上一些人的文档为bitmap,但其实bitset感觉更准确一点，它只能验证是否存在)+多次hash，对于一个数据我们进行`k`次hash,每次hash除原始数据外加上一个固定增量，使几次hash结果不同，得到几个不同的key,然后在bitset上面验证这些key是否都存在，如果都存在，如果存在则有概率认为该数据存在（为什么是概率认为，因为可能有其他数据的keys叠加在一起，使那几个key对应的值都存在）
+
+这是wiki上面的关于bit长度和散列次数的最佳位置的推导（没有看数学证明）:
+
+bit数组长度 m
+
+散列函数个数 k
+
+预期元素数量 n
+
+期望误差 ε
+
+![alt text](picture/bloom2.png)
+
+![alt text](picture/bloom1.png)
+
+在go-zero里面实现bloom filter使用的MurmurHash3,因为不太了解这个函数所以使用了sha256实现
+
+### code
+
+```go
+package bloom_filter
+
+import (
+	"crypto/sha256"
+	"math"
+	"math/big"
+)
+
+type BloomFilter struct {
+	bitSet  []byte
+	hashLen int
+}
+
+const Itor = 114
+
+var bitLen *big.Int
+
+func New(n int, expect float64) *BloomFilter {
+	m := int(-float64(n) * math.Log(expect) / math.Pow((math.Ln2), 2))
+	k := int(float64(m) / float64(n) * math.Ln2)
+	bloomFilter := &BloomFilter{
+		bitSet:  make([]byte, (m+7)/8),
+		hashLen: k,
+	}
+	bitLen = big.NewInt(int64(m))
+	return bloomFilter
+}
+
+func (bloomFilter *BloomFilter) Insert(element []byte) {
+	hasher := sha256.New()
+	temp := make([]byte, len(element))
+	copy(temp, element)
+	for i := 0; i < bloomFilter.hashLen; i++ {
+		temp = append(temp, byte(Itor))
+		hasher.Write(temp)
+		hash := hasher.Sum(nil)
+		dataBigInt := new(big.Int).SetBytes(hash)
+		dataBigInt.Mod(dataBigInt, bitLen)
+		bloomFilter.bitSet[dataBigInt.Int64()/8] |= (1 << byte(dataBigInt.Int64()%8))
+	}
+}
+
+func (bloomFilter *BloomFilter) Query(element []byte) bool{
+	hasher := sha256.New()
+	temp := make([]byte, len(element))
+	copy(temp, element)
+	cnt := 0
+	for i := 0; i < bloomFilter.hashLen; i++ {
+		temp = append(temp, byte(Itor))
+		hasher.Write(temp)
+		hash := hasher.Sum(nil)
+		dataBigInt := new(big.Int).SetBytes(hash)
+		dataBigInt.Mod(dataBigInt, bitLen)
+		if bloomFilter.bitSet[dataBigInt.Int64()/8]&(1<<byte(dataBigInt.Int64()%8)) != 0 {
+			cnt++
+		}
+	}
+	return cnt == bloomFilter.hashLen
+}
+
+```
