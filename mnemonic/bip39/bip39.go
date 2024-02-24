@@ -3,8 +3,10 @@ package bip39
 import (
 	"crypto/rand"
 	"crypto/sha256"
-	"fmt"
+	"crypto/sha512"
 	"math/big"
+
+	"golang.org/x/crypto/pbkdf2"
 )
 
 // The allowed size of ENT is 128-256 bits
@@ -17,7 +19,7 @@ func generateEntropy(bitSize int) []byte {
 	return entropy
 }
 
-func generateMnemonic(entropy []byte) []string {
+func generateMnemonic(entropy []byte) string {
 	entLen := len(entropy) * 8
 	csLen := entLen / 32
 	msLen := (entLen + csLen) / 11
@@ -35,7 +37,7 @@ func generateMnemonic(entropy []byte) []string {
 			dataBigInt.Or(dataBigInt, bigOne)
 		}
 	}
-	fmt.Println(dataBigInt)
+	// fmt.Println(dataBigInt)
 	mnemonic := make([]string, msLen)
 	index := big.NewInt(0)
 	//2048
@@ -46,5 +48,17 @@ func generateMnemonic(entropy []byte) []string {
 		mnemonic[i] = English[index.Int64()]
 		dataBigInt.Div(dataBigInt, mod)
 	}
-	return mnemonic
+
+	var result string
+	for i := 0; i < msLen; i++ {
+		if i != 0 {
+			result += " "
+		}
+		result += mnemonic[i]
+	}
+	return result
+}
+
+func generateSeed(mnemonic string, passphrase string) []byte {
+	return pbkdf2.Key([]byte(mnemonic), []byte("mnemonic"+passphrase), 2048, 64, sha512.New)
 }

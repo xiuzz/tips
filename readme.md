@@ -154,6 +154,7 @@ https://ethereum.org/en/developers/docs/data-structures-and-encoding/patricia-me
 
 助记句（“助记代码”，“种子短语”，“种子词”）是一种将大量随机生成的数字表示单词序列的方法， 使其更易于人类存储。
 
+## generate mnemonic 
 遵循bip39标准： https://github.com/bitcoin/bips/blob/master/bip-0039.mediawiki
 
 理解助记词,首先知道官方文档这句话就行了：
@@ -182,10 +183,7 @@ MS = (ENT + CS) / 11
 |  256  |  8 |   264  |  24  |
 </pre>
 
-==From mnemonic to seed==
-
-
-### code
+#### code
 
 code 参考了官方的：https://github.com/tyler-smith/go-bip39
 
@@ -212,7 +210,7 @@ func generateEntropy(bitSize int) []byte {
 	return entropy
 }
 
-func generateMnemonic(entropy []byte) []string {
+func generateMnemonic(entropy []byte) string {
 	entLen := len(entropy) * 8
 	csLen := entLen / 32
 	msLen := (entLen + csLen) / 11
@@ -241,7 +239,13 @@ func generateMnemonic(entropy []byte) []string {
 		mnemonic[i] = English[index.Int64()]
 		dataBigInt.Div(dataBigInt, mod)
 	}
-	return mnemonic
+	for i := 0; i < msLen; i++ {
+		if i != 0 {
+			result += " "
+		}
+		result += mnemonic[i]
+	}
+	return result
 }
 
 
@@ -253,4 +257,20 @@ func generateMnemonic(entropy []byte) []string {
 ![alt text](picture/bip397.png)
 ![alt text](picture/bip394.png)
 ![alt text](picture/bip395.png)
-![alt text](picture/bip396.png)``
+![alt text](picture/bip396.png)
+
+### From mnemonic to seed 
+
+A user may decide to protect their mnemonic with a passphrase. If a passphrase is not present, an empty string "" is used instead.
+
+To create a binary seed from the mnemonic, we use the PBKDF2 function with a mnemonic sentence (in UTF-8 NFKD) used as the password and the string "mnemonic" + passphrase (again in UTF-8 NFKD) used as the salt. The iteration count is set to 2048 and HMAC-SHA512 is used as the pseudo-random function. The length of the derived key is 512 bits (= 64 bytes).
+![alt text](picture/big398.png)
+
+### code
+```go
+func generateSeed(mnemonic string, passphrase string) []byte {
+	return pbkdf2.Key([]byte(mnemonic), []byte("mnemonic"+passphrase), 2048, 64, sha512.New)
+}
+```
+
+该种子稍后可用于使用 BIP-0032 或类似方法生成确定性钱包。
