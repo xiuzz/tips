@@ -249,3 +249,8 @@ func generateMnemonic(entropy []byte) []string {
 ![alt text](picture/big392.png)
 
 ![alt text](picture/big393.png)
+
+![alt text](picture/bip397.png)
+![alt text](picture/bip394.png)
+![alt text](picture/bip395.png)
+![alt text](picture/bip396.png)``

@@ -3,6 +3,7 @@ package bip39
 import (
 	"crypto/rand"
 	"crypto/sha256"
+	"fmt"
 	"math/big"
 )
 
@@ -34,7 +35,7 @@ func generateMnemonic(entropy []byte) []string {
 			dataBigInt.Or(dataBigInt, bigOne)
 		}
 	}
-
+	fmt.Println(dataBigInt)
 	mnemonic := make([]string, msLen)
 	index := big.NewInt(0)
 	//2048
