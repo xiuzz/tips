@@ -11,9 +11,18 @@ func TestCrypto1(t *testing.T) {
 	for i := 0; i < 256; i++ {
 		x := make([]int, 3)
 		y := make([]int, 3)
-		for i := 0; i < 3; i++ {
-			x[i] = i + 1
-			y[i] = int(EnCrypto(i + 1))
+		cnt := 0
+		for i := 0; i < P; i++ {
+			tmp, flag := EnCrypto(i + 1)
+			if flag {
+				continue
+			}
+			x[cnt] = i + 1
+			y[cnt] = int(tmp)
+			cnt++
+			if cnt == 3 {
+				break
+			}
 			// fmt.Println(arr[i])
 		}
 
@@ -35,12 +44,20 @@ func TestCrypto2(t *testing.T) {
 		x := make([]int, 3)
 		y := make([]int, 3)
 
-		for i := 0; i < 3; i++ {
-			x[i] = i + 1
-			y[i] = int(EnCrypto(i + 1))
+		cnt := 0
+		for i := 0; i < P; i++ {
+			tmp, flag := EnCrypto(i + 1)
+			if flag {
+				continue
+			}
+			x[cnt] = i + 1
+			y[cnt] = int(tmp)
+			cnt++
+			if cnt == 3 {
+				break
+			}
 			// fmt.Println(arr[i])
 		}
-
 		ans := DeCrypto(x, y)
 		if ans != c {
 			fmt.Println(j, ans)

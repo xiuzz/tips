@@ -1,9 +1,9 @@
 package crypto
 
 const (
-	P = 251
-	A = 101
-	B = 39
+	P = 257
+	A = 1
+	B = 3
 )
 
 // f(x) = Ax^2 + Bx + C
@@ -32,8 +32,12 @@ func quick_mi(a int, b int) int {
 func inv(a int) int {
 	return quick_mi(a, P-2)
 }
-func EnCrypto(index int) byte {
-	return byte((A*index*index + B*index + int(c)) % P)
+func EnCrypto(index int) (byte, bool) {
+	a := A*index*index + B*index + int(c)
+	if a % 256 == 0 {
+		return 0, true
+	}
+ 	return byte(a % P), false
 }
 
 func DeCrypto(x []int, y []int) byte {
