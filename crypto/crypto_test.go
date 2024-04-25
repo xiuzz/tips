@@ -5,19 +5,49 @@ import (
 	"testing"
 )
 
-func TestCrypto(t *testing.T) {
-	New(10)
-	arr := make([]byte, 3);
-	for i := 0; i < 3; i++ {
-		arr[i] = EnCrypto(i+1)
+func TestCrypto1(t *testing.T) {
+	New(111)
+	flag := false
+	for i := 0; i < 256; i++ {
+		x := make([]int, 3)
+		y := make([]int, 3)
+		for i := 0; i < 3; i++ {
+			x[i] = i + 1
+			y[i] = int(EnCrypto(i + 1))
+			// fmt.Println(arr[i])
+		}
+
+		ans := DeCrypto(x, y)
+		if ans != c {
+			fmt.Println(i, ans)
+			flag = true
+		}
 	}
-	dec := make([][]int, 3)
-	for i := 0; i < len(dec); i++ {
-		dec[i] = []int{((i+1)*(i+1)), int(i+1), 1, int(arr[i])}
-	}
-	ans := DeCrypto(dec)
-	if ans != c {
-		fmt.Println(ans)
+	if flag {
 		t.Fatal("err")
+	}
+}
+
+func TestCrypto2(t *testing.T) {
+	for j := 0; j < P; j++ {
+		New(byte(j))
+		flag := false
+		x := make([]int, 3)
+		y := make([]int, 3)
+
+		for i := 0; i < 3; i++ {
+			x[i] = i + 1
+			y[i] = int(EnCrypto(i + 1))
+			// fmt.Println(arr[i])
+		}
+
+		ans := DeCrypto(x, y)
+		if ans != c {
+			fmt.Println(j, ans)
+			flag = true
+		}
+		if flag {
+			t.Fatal("err")
+		}
 	}
 }
