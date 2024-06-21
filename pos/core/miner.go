@@ -51,9 +51,8 @@ func AddMiner(miner Miner, Miners *[]Miner) {
 // 添加矿工
 func AddMiners(Miners *[]Miner) {
 	var MinerNum int
-	MinerNum = 4
-	// fmt.Print("请输入创建矿工的数量：")
-	// fmt.Scanf("%d", &MinerNum)
+	fmt.Print("请输入创建矿工的数量：")
+	fmt.Scanf("%d", &MinerNum)
 	for i := 0; i < MinerNum; i++ {
 		AddMiner(*createMiner(), Miners)
 	}

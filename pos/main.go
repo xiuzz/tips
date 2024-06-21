@@ -29,7 +29,6 @@ func main() {
 	Coins = InitCoins(Miners)
 	for i := 0; i < len(Miners); i++ {
 		AddCoin(NewCoin(int64(i), Miners), &Coins)
-		AddCoin(NewCoin(int64(i), Miners), &Coins)
 	}
 	//调用InitBlockChain函数，生成一个区块数组
 	BlockChain = InitBlockChain(Miners, Coins)
